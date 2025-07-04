@@ -1,6 +1,6 @@
 from flask import Flask, request, send_file
 import subprocess
-import os
+import uuid
 
 app = Flask(__name__)
 
@@ -10,11 +10,12 @@ def generate():
     if not text:
         return "No text provided", 400
 
-    # Write text to a temp file or pass as arg
-    subprocess.run(['blender', '--background', '--python', 'generate_text.py', '--', text])
+    filename = f"{uuid.uuid4()}.fbx"
+    subprocess.run([
+        "blender", "-b", "-P", "generate_text.py", "--", text, filename
+    ], check=True)
 
-    # Return FBX file
-    return send_file('output.fbx', as_attachment=True)
+    return send_file(filename, as_attachment=True)
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
