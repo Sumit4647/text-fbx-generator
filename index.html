@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text3D Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fff;
+      color: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4rem 1rem;
+    }
+    h1 { font-size: 2.5rem; font-weight: 700; }
+    h2 { font-size: 2rem; font-weight: 400; color: #888; margin-bottom: 2rem; }
+    p { max-width: 400px; text-align: center; color: #555; margin-bottom: 2rem; }
+    input {
+      padding: 1rem;
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+    button {
+      padding: 1rem 2rem;
+      background: black;
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover { background: #333; }
+    footer {
+      margin-top: 4rem;
+      font-size: 0.875rem;
+      color: #aaa;
+    }
+  </style>
+</head>
+<body>
+  <h1>Text3D</h1>
+  <h2>Generator</h2>
+  <p>Create 3D Text Instantly. Enter your text and download your FBX file.</p>
+  <input type="text" id="textInput" placeholder="Enter your 3D text...">
+  <button id="generateBtn">Generate 3D Text</button>
+
+  <footer>Powered by Blender · Render · Hosted on Netlify</footer>
+
+  <script>
+    const input = document.getElementById("textInput");
+    const button = document.getElementById("generateBtn");
+
+    button.onclick = async () => {
+      if (!input.value) {
+        alert("Please enter text.");
+        return;
+      }
+
+      button.textContent = "Generating...";
+      const form = new FormData();
+      form.append("text", input.value);
+
+      try {
+        const res = await fetch("https://text-fbx-generator.onrender.com/generate", {
+          method: "POST",
+          body: form,
+        });
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "3dtext.fbx";
+        a.click();
+      } catch (e) {
+        alert("Something went wrong!");
+      }
+
+      button.textContent = "Generate 3D Text";
+    }
+  </script>
+</body>
+</html>
