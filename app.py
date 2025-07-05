@@ -1,21 +1,10 @@
 from flask import Flask, request, send_file
-import subprocess
-import uuid
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # <-- Enable frontend access
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    text = request.form.get('text', '')
-    if not text:
-        return "No text provided", 400
-
-    filename = f"{uuid.uuid4()}.fbx"
-    subprocess.run([
-        "blender", "-b", "-P", "generate_text.py", "--", text, filename
-    ], check=True)
-
-    return send_file(filename, as_attachment=True)
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    # run Blender script here to create an FBX file, e.g. "out.fbx"
+    return send_file('out.fbx', as_attachment=True, download_name='3dtext.fbx')
