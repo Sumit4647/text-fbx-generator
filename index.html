@@ -51,8 +51,21 @@
   <h1>Text3D</h1>
   <h2>Generator</h2>
   <p>Create 3D Text Instantly. Enter your text and download your FBX file.</p>
-  <input type="text" id="textInput" placeholder="Enter your 3D text...">
-  <button id="generateBtn">Generate 3D Text</button>
+  <div class="input-group">
+  <input type="text" id="textInput" placeholder="Enter your text here...">
+  <select id="fontSelect">
+    <option value="BurbankBigCondensed-Black">Burbank</option>
+    <option value="OpenSans-Bold">Open Sans</option>
+    <option value="Roboto-Regular">Roboto</option>
+  </select>
+</div>
+<button id="generateBtn">Generate 3D Text</button>
+
+<script>
+  // inside your existing JS generateText() function, add:
+  formData.append("font", document.getElementById("fontSelect").value);
+</script>
+
 
   <footer>Powered by Blender · Render · Hosted on Netlify</footer>
 

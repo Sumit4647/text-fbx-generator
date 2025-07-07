@@ -1,33 +1,32 @@
 from flask import Flask, request, send_file
 from flask_cors import CORS
-import subprocess
-import uuid
-import os
+import subprocess, uuid, os
 
 app = Flask(__name__)
-CORS(app)  # Allow cross-origin requests
+CORS(app)
+
+# Map keys to font files in your Font/ folder
+FONT_MAP = {
+  "BurbankBigCondensed-Black": "Font/BurbankBigCondensed-Black.otf",
+  "OpenSans-Bold":             "Font/OpenSans-Bold.ttf",
+  "Roboto-Regular":            "Font/Roboto-Regular.ttf",
+}
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    text = request.form.get('text')
-    if not text:
-        return "Missing text", 400
+    text     = request.form.get('text', '').strip()
+    font_key = request.form.get('font', 'BurbankBigCondensed-Black')
+    if not text or font_key not in FONT_MAP:
+        return "Bad request", 400
 
-    # Generate unique filename
-    output_file = f"{uuid.uuid4()}.fbx"
-    blender_cmd = [
-        "blender", "--background", "--python", "generate_text.py", "--", text, output_file
+    filename = f"{uuid.uuid4()}.fbx"
+    font_arg = font_key  # pass the key to Blender script
+    cmd = [
+      "blender","--background","--python","generate_text.py","--",
+      text, font_arg, filename
     ]
+    subprocess.run(cmd, check=True)
+    return send_file(filename, as_attachment=True, download_name="3dtext.fbx")
 
-    try:
-        subprocess.run(blender_cmd, check=True)
-    except subprocess.CalledProcessError as e:
-        return f"Blender failed: {e}", 500
-
-    if not os.path.exists(output_file):
-        return "FBX not created", 500
-
-    return send_file(output_file, as_attachment=True, download_name="3dtext.fbx")
-
-if __name__ == "__main__":
+if __name__=="__main__":
     app.run(host="0.0.0.0", port=5000)
