@@ -43,7 +43,7 @@ border_curve.bevel_resolution= 4
 border_obj = bpy.data.objects.new("BorderText", border_curve)
 bpy.context.collection.objects.link(border_obj)
 border_obj.rotation_euler = (1.5708, 0, 0)
-border_obj.location.y   -= 0.05
+border_obj.location.y   += 0.05
 
 # Convert both to mesh
 for obj in (main_obj, border_obj):
