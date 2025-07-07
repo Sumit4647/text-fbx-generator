@@ -31,36 +31,51 @@ main_obj = bpy.data.objects.new("MainText", curve)
 bpy.context.collection.objects.link(main_obj)
 
 # Straighten text on X axis (90°)
-main_obj.rotation_euler = (1.5708, 0, 0)  # 1.5708 rad = 90° on X\ n
-# Duplicate for border/backplate
+main_obj.rotation_euler = (1.5708, 0, 0)
+
+# Duplicate curve data for border
 border_curve = curve.copy()
 border_curve.body = text
 border_curve.font = font
 
-# Style for border text
+# Style settings for border text
 border_curve.resolution_u = 5      # Lower resolution
 border_curve.extrude = 0.04        # Same extrude
 border_curve.bevel_depth = 0.024   # Bevel depth for rounding
-border_curve.bevel_resolution = 4   # Bevel smoothness
+border_curve.bevel_resolution = 4  # Bevel smoothness
 
+# Create border text object
 border_obj = bpy.data.objects.new("BorderText", border_curve)
 bpy.context.collection.objects.link(border_obj)
 
-# Match rotation and position offset for border
+# Match rotation and move border back on Y axis
 border_obj.rotation_euler = (1.5708, 0, 0)
-border_obj.location.y -= 0.03  # Move back 0.03m on Y axis
+border_obj.location.y -= 0.05  # Move back 0.05m on Y axis
 
-# Convert both to mesh and export selection
-for obj in [main_obj, border_obj]:
+# Convert to mesh
+for obj in (main_obj, border_obj):
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
     bpy.ops.object.convert(target='MESH')
     obj.select_set(False)
+
+# Assign materials
+def assign_material(obj, name, color):
+    mat = bpy.data.materials.get(name) or bpy.data.materials.new(name)
+    mat.use_nodes = False
+    mat.diffuse_color = (*color, 1)
+    if obj.data.materials:
+        obj.data.materials[0] = mat
+    else:
+        obj.data.materials.append(mat)
+
+assign_material(main_obj, "white", (1.0, 1.0, 1.0))
+assign_material(border_obj, "black", (0.0, 0.0, 0.0))
 
 # Select meshes for FBX export
 main_obj.select_set(True)
 border_obj.select_set(True)
 
 # Export as FBX
-bpy.ops.export_scene.fbx(filepath=output_path, use_selection=True)
-print(f"Exported 3D text FBX: {output_path}")
+oops = bpy.ops.export_scene.fbx(filepath=output_path, use_selection=True)
+print(f"Exported FBX to {output_path}")
