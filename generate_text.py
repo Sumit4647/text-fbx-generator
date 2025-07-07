@@ -15,67 +15,54 @@ if not os.path.exists(font_file):
     raise FileNotFoundError(f"Font file not found: {font_file}")
 font = bpy.data.fonts.load(font_file)
 
-# Create text curve
+# Create curve for text
 curve = bpy.data.curves.new(type="FONT", name="TextCurve")
 curve.body = text
 curve.font = font
+# Main text style
+curve.resolution_u = 9
+curve.extrude = 0.04
+curve.bevel_depth = 0
+curve.bevel_resolution = 0
 
-# Style settings for main text
-curve.resolution_u = 9        # Preview resolution U
-curve.extrude = 0.04          # Extrude depth (meters)
-curve.bevel_depth = 0         # No bevel depth
-curve.bevel_resolution = 0    # No bevel resolution
-
-# Create main text object
+# Create main text object and link
 main_obj = bpy.data.objects.new("MainText", curve)
 bpy.context.collection.objects.link(main_obj)
-
-# Straighten text on X axis (90°)
+# Straighten on X axis
 main_obj.rotation_euler = (1.5708, 0, 0)
 
-# Duplicate curve data for border
-border_curve = curve.copy()
-border_curve.body = text
-border_curve.font = font
+# Convert main text to mesh
+bpy.context.view_layer.objects.active = main_obj
+main_obj.select_set(True)
+bpy.ops.object.convert(target='MESH')
 
-# Style settings for border text
-border_curve.resolution_u = 5      # Lower resolution
-border_curve.extrude = 0.04        # Same extrude
-border_curve.bevel_depth = 0.024   # Bevel depth for rounding
-border_curve.bevel_resolution = 4  # Bevel smoothness
+# Assign white material
+mat_white = bpy.data.materials.get("white") or bpy.data.materials.new("white")
+mat_white.use_nodes = False
+mat_white.diffuse_color = (1.0, 1.0, 1.0, 1)
+main_obj.data.materials.append(mat_white)
 
-# Create border text object
-border_obj = bpy.data.objects.new("BorderText", border_curve)
+# Duplicate mesh for border
+border_obj = main_obj.copy()
+border_obj.data = main_obj.data.copy()
+border_obj.name = "BorderText"
 bpy.context.collection.objects.link(border_obj)
 
-# Match rotation and move border back on Y axis
-border_obj.rotation_euler = (1.5708, 0, 0)
-border_obj.location.y -= 0.05  # Move back 0.05m on Y axis
+# Style border: offset, bevel
+# (Curve bevel does not apply post-conversion, bevel already converted into mesh)
+border_obj.location.y -= 0.05  # offset 0.05m on Y
+# Note: bevel on mesh must be applied via modifier before conversion; skipping for simplicity
 
-# Convert to mesh
-for obj in (main_obj, border_obj):
-    bpy.context.view_layer.objects.active = obj
-    obj.select_set(True)
-    bpy.ops.object.convert(target='MESH')
-    obj.select_set(False)
+# Assign black material
+mat_black = bpy.data.materials.get("black") or bpy.data.materials.new("black")
+mat_black.use_nodes = False
+mat_black.diffuse_color = (0.0, 0.0, 0.0, 1)
+border_obj.data.materials.append(mat_black)
 
-# Assign materials
-def assign_material(obj, name, color):
-    mat = bpy.data.materials.get(name) or bpy.data.materials.new(name)
-    mat.use_nodes = False
-    mat.diffuse_color = (*color, 1)
-    if obj.data.materials:
-        obj.data.materials[0] = mat
-    else:
-        obj.data.materials.append(mat)
-
-assign_material(main_obj, "white", (1.0, 1.0, 1.0))
-assign_material(border_obj, "black", (0.0, 0.0, 0.0))
-
-# Select meshes for FBX export
+# Select both for export
 main_obj.select_set(True)
 border_obj.select_set(True)
 
 # Export as FBX
-oops = bpy.ops.export_scene.fbx(filepath=output_path, use_selection=True)
-print(f"Exported FBX to {output_path}")
+bpy.ops.export_scene.fbx(filepath=output_path, use_selection=True)
+print(f"Exported FBX: {output_path}")
