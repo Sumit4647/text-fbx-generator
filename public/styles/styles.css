@@ -1,0 +1,97 @@
+/* Place this file in public/styles/styles.css */
+
+@font-face {
+  font-family: "A4SPEED-Bold";
+  src: url("../Font/A4SPEED-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Arial";
+  src: url("../Font/Arial.ttf") format("truetype");
+}
+@font-face {
+  font-family: "BebasNeue-Regular";
+  src: url("../Font/BebasNeue-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Bold Drop";
+  src: url("../Font/Bold Drop.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Bubblegum";
+  src: url("../Font/Bubblegum.ttf") format("truetype");
+}
+@font-face {
+  font-family: "BurbankBigCondensed-Black";
+  src: url("../Font/BurbankBigCondensed-Black.otf") format("opentype");
+}
+@font-face {
+  font-family: "Creamy Soup";
+  src: url("../Font/Creamy Soup.otf") format("opentype");
+}
+@font-face {
+  font-family: "Designer";
+  src: url("../Font/Designer.otf") format("opentype");
+}
+@font-face {
+  font-family: "Heavitas";
+  src: url("../Font/Heavitas.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Kind Daily";
+  src: url("../Font/Kind Daily.ttf") format("truetype");
+}
+@font-face {
+  font-family: "LEMONMILK-Bold";
+  src: url("../Font/LEMONMILK-Bold.otf") format("opentype");
+}
+@font-face {
+  font-family: "Minecrafter.Alt";
+  src: url("../Font/Minecrafter.Alt.ttf") format("truetype");
+}
+@font-face {
+  font-family: "OpenSans-Bold";
+  src: url("../Font/OpenSans-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "PackyGreat";
+  src: url("../Font/PackyGreat.ttf") format("truetype");
+}
+@font-face {
+  font-family: "paladins";
+  src: url("../Font/paladins.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Pricedown Bl";
+  src: url("../Font/Pricedown Bl.otf") format("opentype");
+}
+@font-face {
+  font-family: "Roboto-Regular";
+  src: url("../Font/Roboto-Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Square Game";
+  src: url("../Font/Square Game.otf") format("opentype");
+}
+@font-face {
+  font-family: "Super Greatly";
+  src: url("../Font/Super Greatly.ttf") format("truetype");
+}
+@font-face {
+  font-family: "SuperMario256";
+  src: url("../Font/SuperMario256.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Supersonic Rocketship";
+  src: url("../Font/Supersonic Rocketship.ttf") format("truetype");
+}
+@font-face {
+  font-family: "THEBOLDFONT";
+  src: url("../Font/THEBOLDFONT.ttf") format("truetype");
+}
+
+.font-preview {
+  font-size: 32px;
+  font-weight: normal;
+  text-align: center;
+  padding: 10px;
+}
