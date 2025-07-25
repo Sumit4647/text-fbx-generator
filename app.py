@@ -7,10 +7,30 @@ CORS(app)
 
 # Map keys to font files in your Font/ folder
 FONT_MAP = {
-  "BurbankBigCondensed-Black": "Font/BurbankBigCondensed-Black.otf",
-  "OpenSans-Bold":             "Font/OpenSans-Bold.ttf",
-  "Roboto-Regular":            "Font/Roboto-Regular.ttf",
+    "A4SPEED-Bold":           "Font/A4SPEED-Bold.ttf",
+    "Arial":                  "Font/Arial.ttf",
+    "BebasNeue-Regular":      "Font/BebasNeue-Regular.ttf",
+    "Bold Drop":              "Font/Bold Drop.ttf",
+    "Bubblegum":              "Font/Bubblegum.ttf",
+    "BurbankBigCondensed-Black": "Font/BurbankBigCondensed-Black.otf",
+    "Creamy Soup":            "Font/Creamy Soup.otf",
+    "Designer":               "Font/Designer.otf",
+    "Heavitas":               "Font/Heavitas.ttf",
+    "Kind Daily":             "Font/Kind Daily.ttf",
+    "LEMONMILK-Bold":         "Font/LEMONMILK-Bold.otf",
+    "Minecrafter.Alt":        "Font/Minecrafter.Alt.ttf",
+    "OpenSans-Bold":          "Font/OpenSans-Bold.ttf",
+    "PackyGreat":             "Font/PackyGreat.ttf",
+    "paladins":               "Font/paladins.ttf",
+    "Pricedown Bl":           "Font/Pricedown Bl.otf",
+    "Roboto-Regular":         "Font/Roboto-Regular.ttf",
+    "Square Game":            "Font/Square Game.otf",
+    "Super Greatly":          "Font/Super Greatly.ttf",
+    "SuperMario256":          "Font/SuperMario256.ttf",
+    "Supersonic Rocketship":  "Font/Supersonic Rocketship.ttf",
+    "THEBOLDFONT":            "Font/THEBOLDFONT.ttf",
 }
+
 
 @app.route('/generate', methods=['POST'])
 def generate():
