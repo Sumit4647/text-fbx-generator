@@ -1,72 +1,100 @@
-import bpy
-import os
-import sys
-import json
+import bpy, sys, os
 
-# Get arguments
-argv = sys.argv
-argv = argv[argv.index("--") + 1:]  # get all args after "--"
-text = argv[0]
-font_path = argv[1]
-output_path = argv[2]
+# Parse args: text, font_key, output_path
+argv = sys.argv[sys.argv.index("--")+1:]
+text, font_key, output_path = argv
 
-# Font-specific parameters
-FONT_PARAMS = {
-    "A4SPEED-Bold":               {"main_res": 1, "main_ext": 0.074, "border_res": 1, "border_ext": 0.04,  "border_bevel_res": 2},
-    "Arial":                      {"main_res": 1, "main_ext": 0.074, "border_res": 1, "border_ext": 0.04,  "border_bevel_res": 2},
-    "BebasNeue-Regular":          {"main_res": 1, "main_ext": 0.074, "border_res": 1, "border_ext": 0.04,  "border_bevel_res": 2},
-    "Bold Drop":                  {"main_res": 2, "main_ext": 0.069, "border_res": 1, "border_ext": 0.074, "border_bevel_res": 1},
-    "Bubblegum":                  {"main_res": 4, "main_ext": 0.069, "border_res": 4, "border_ext": 0.074, "border_bevel_res": 2},
-    "BurbankBigCondensed-Black":  {"main_res": 7, "main_ext": 0.069, "border_res": 5, "border_ext": 0.074, "border_bevel_res": 1},
-    "Creamy Soup":                {"main_res": 5, "main_ext": 0.069, "border_res": 3, "border_ext": 0.074, "border_bevel_res": 1},
-    "Designer":                   {"main_res": 6, "main_ext": 0.069, "border_res": 3, "border_ext": 0.074, "border_bevel_res": 1},
-    "Heavitas":                   {"main_res": 6, "main_ext": 0.069, "border_res": 5, "border_ext": 0.074, "border_bevel_res": 2},
-    "Kind Daily":                 {"main_res": 2, "main_ext": 0.069, "border_res": 1, "border_ext": 0.074, "border_bevel_res": 1, "border_bevel_depth": 0.04},
-    "LEMONMILK-Bold":             {"main_res": 7, "main_ext": 0.069, "border_res": 6, "border_ext": 0.074, "border_bevel_res": 1, "border_bevel_depth": 0.029},
-    "Minecrafter.Alt":            {"main_res": 1, "main_ext": 0.069, "border_res": 1, "border_ext": 0.074, "border_bevel_res": 1, "border_bevel_depth": 0.039},
-    "OpenSans-Bold":              {"main_res": 5, "main_ext": 0.069, "border_res": 4, "border_ext": 0.074, "border_bevel_res": 1, "border_bevel_depth": 0.029},
-    "PackyGreat":                 {"main_res": 4, "main_ext": 0.069, "border_res": 3, "border_ext": 0.074, "border_bevel_res": 1, "border_bevel_depth": 0.032},
-    "paladins":                   {"main_res": 1, "main_ext": 0.069, "border_res": 1, "border_ext": 0.074, "border_bevel_res": 1, "border_bevel_depth": 0.032},
-    "Pricedown Bl":               {"main_res": 4, "main_ext": 0.069, "border_res": 3, "border_ext": 0.074, "border_bevel_res": 1, "border_bevel_depth": 0.032},
-    "Roboto-Regular":             {"main_res": 4, "main_ext": 0.069, "border_res": 3, "border_ext": 0.074, "border_bevel_res": 1, "border_bevel_depth": 0.021},
-    "Square Game":                {"main_res": 7, "main_ext": 0.069, "border_res": 5, "border_ext": 0.074, "border_bevel_res": 1, "border_bevel_depth": 0.03},
-    "Super Greatly":              {"main_res": 3, "main_ext": 0.069, "border_res": 2, "border_ext": 0.074, "border_bevel_res": 1, "border_bevel_depth": 0.03},
-    "SuperMario256":              {"main_res": 1, "main_ext": 0.069, "border_res": 1, "border_ext": 0.074, "border_bevel_res": 1, "border_bevel_depth": 0.03},
-    "Supersonic Rocketship":      {"main_res": 5, "main_ext": 0.069, "border_res": 6, "border_ext": 0.074, "border_bevel_res": 1, "border_bevel_depth": 0.03},
-    "THEBOLDFONT":                {"main_res": 4, "main_ext": 0.069, "border_res": 3, "border_ext": 0.074, "border_bevel_res": 1, "border_bevel_depth": 0.03}
+# Reset scene
+bpy.ops.wm.read_factory_settings(use_empty=True)
+
+# Determine font file path
+# Map keys to font files in your Font/ folder
+FONT_MAP = {
+    "A4SPEED-Bold":           "Font/A4SPEED-Bold.ttf",
+    "Arial":                  "Font/Arial.ttf",
+    "BebasNeue-Regular":      "Font/BebasNeue-Regular.ttf",
+    "Bold Drop":              "Font/Bold Drop.ttf",
+    "Bubblegum":              "Font/Bubblegum.ttf",
+    "BurbankBigCondensed-Black": "Font/BurbankBigCondensed-Black.otf",
+    "Creamy Soup":            "Font/Creamy Soup.otf",
+    "Designer":               "Font/Designer.otf",
+    "Heavitas":               "Font/Heavitas.ttf",
+    "Kind Daily":             "Font/Kind Daily.ttf",
+    "LEMONMILK-Bold":         "Font/LEMONMILK-Bold.otf",
+    "Minecrafter.Alt":        "Font/Minecrafter.Alt.ttf",
+    "OpenSans-Bold":          "Font/OpenSans-Bold.ttf",
+    "PackyGreat":             "Font/PackyGreat.ttf",
+    "paladins":               "Font/paladins.ttf",
+    "Pricedown Bl":           "Font/Pricedown Bl.otf",
+    "Roboto-Regular":         "Font/Roboto-Regular.ttf",
+    "Square Game":            "Font/Square Game.otf",
+    "Super Greatly":          "Font/Super Greatly.ttf",
+    "SuperMario256":          "Font/SuperMario256.ttf",
+    "Supersonic Rocketship":  "Font/Supersonic Rocketship.ttf",
+    "THEBOLDFONT":            "Font/THEBOLDFONT.ttf",
 }
 
-# Get font name without extension
-font_name = os.path.splitext(os.path.basename(font_path))[0]
-params = FONT_PARAMS.get(font_name, {"main_res": 9, "main_ext": 0.04, "border_res": 5, "border_ext": 0.04, "border_bevel_res": 4})
+font_file = os.path.join(os.path.dirname(__file__), FONT_MAP.get(font_key))
+if not os.path.exists(font_file):
+    raise FileNotFoundError(font_file)
+font = bpy.data.fonts.load(font_file)
 
-# Clear existing objects
-bpy.ops.object.select_all(action='SELECT')
-bpy.ops.object.delete()
+# Create curve & style main text
+curve = bpy.data.curves.new(type="FONT", name="TextCurve")
+curve.body            = text
+curve.font            = font
+curve.resolution_u    = 9
+curve.extrude         = 0.04
+curve.bevel_depth     = 0
+curve.bevel_resolution= 0
 
-# Create text object
-bpy.ops.object.text_add()
-text_obj = bpy.context.active_object
-text_obj.data.body = text
-
-# Set font
-font = bpy.data.fonts.load(font_path)
-text_obj.data.font = font
-
-# Apply main text parameters
-text_obj.data.resolution_u = params["main_res"]
-text_obj.data.extrude = params["main_ext"]
+main_obj = bpy.data.objects.new("MainText", curve)
+bpy.context.collection.objects.link(main_obj)
+main_obj.rotation_euler = (1.5708, 0, 0)
 
 # Duplicate for border
-bpy.ops.object.duplicate()
-border_obj = bpy.context.active_object
-border_obj.data.resolution_u = params["border_res"]
-border_obj.data.extrude = params["border_ext"]
-border_obj.data.bevel_resolution = params["border_bevel_res"]
-border_obj.data.bevel_depth = params.get("border_bevel_depth", 0.024)
+border_curve = curve.copy()
+border_curve.body            = text
+border_curve.font            = font
+border_curve.resolution_u    = 5
+border_curve.extrude         = 0.04
+border_curve.bevel_depth     = 0.024
+border_curve.bevel_resolution= 4
 
-# Move slightly behind to act as outline
-border_obj.location.z -= 0.001
+border_obj = bpy.data.objects.new("BorderText", border_curve)
+bpy.context.collection.objects.link(border_obj)
+border_obj.rotation_euler = (1.5708, 0, 0)
+border_obj.location.y   += 0.035
 
-# Export to FBX
+# Convert both to mesh
+for obj in (main_obj, border_obj):
+    bpy.context.view_layer.objects.active = obj
+    obj.select_set(True)
+    bpy.ops.object.convert(target='MESH')
+    obj.select_set(False)
+
+# Assign white / black materials
+def assign(obj, name, color):
+    mat = bpy.data.materials.get(name) or bpy.data.materials.new(name)
+    mat.use_nodes = False
+    mat.diffuse_color = (*color, 1)
+    obj.data.materials.append(mat)
+
+assign(main_obj,  "white", (1,1,1))
+assign(border_obj,"black", (0,0,0))
+
+# Export only these two
+main_obj.select_set(True)
+border_obj.select_set(True)
 bpy.ops.export_scene.fbx(filepath=output_path, use_selection=True)
+
+Mainly will have to changes
+# Create curve & style main text
+curve.resolution_u    = 9
+curve.extrude         = 0.04
+
+# Duplicate for border
+border_curve.resolution_u    = 5
+border_curve.bevel_resolution= 4
+border_curve.extrude         = 0.04
+border_curve.bevel_depth     = 0.04
