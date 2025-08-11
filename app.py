@@ -36,8 +36,15 @@ FONT_MAP = {
 def generate():
     text     = request.form.get('text', '').strip()
     font_key = request.form.get('font', 'BurbankBigCondensed-Black')
-    main_res = request.form.get('main_res', 9)     # default 9
-    border_res = request.form.get('border_res', 5) # default 5
+   main_res = request.form.get('main_res', 9)
+border_res = request.form.get('border_res', 5)
+
+try:
+    main_res = int(main_res)
+    border_res = int(border_res)
+except ValueError:
+    main_res, border_res = 9, 5
+
 
     if not text or font_key not in FONT_MAP:
         return "Bad request", 400
