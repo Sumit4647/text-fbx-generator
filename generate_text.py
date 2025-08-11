@@ -2,7 +2,9 @@ import bpy, sys, os
 
 # Parse args: text, font_key, output_path, main_res, border_res
 argv = sys.argv[sys.argv.index("--")+1:]
-text, font_key, output_path = argv[:3]
+text = argv[0]
+font_key = argv[1]
+output_path = argv[2]
 main_res = int(argv[3]) if len(argv) > 3 else 9
 border_res = int(argv[4]) if len(argv) > 4 else 5
 
@@ -35,13 +37,12 @@ FONT_MAP = {
     "THEBOLDFONT": "Font/THEBOLDFONT.ttf",
 }
 
-# Load font
 font_file = os.path.join(os.path.dirname(__file__), FONT_MAP.get(font_key))
 if not os.path.exists(font_file):
     raise FileNotFoundError(font_file)
 font = bpy.data.fonts.load(font_file)
 
-# Create main text
+# Main text
 curve = bpy.data.curves.new(type="FONT", name="TextCurve")
 curve.body = text
 curve.font = font
@@ -54,7 +55,7 @@ main_obj = bpy.data.objects.new("MainText", curve)
 bpy.context.collection.objects.link(main_obj)
 main_obj.rotation_euler = (1.5708, 0, 0)
 
-# Create border
+# Border text
 border_curve = curve.copy()
 border_curve.body = text
 border_curve.font = font
@@ -85,7 +86,7 @@ def assign(obj, name, color):
 assign(main_obj, "white", (1, 1, 1))
 assign(border_obj, "black", (0, 0, 0))
 
-# Export FBX
+# Export
 main_obj.select_set(True)
 border_obj.select_set(True)
 bpy.ops.export_scene.fbx(filepath=output_path, use_selection=True)
