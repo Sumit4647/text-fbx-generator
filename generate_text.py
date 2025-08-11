@@ -5,8 +5,12 @@ argv = sys.argv[sys.argv.index("--")+1:]
 text = argv[0]
 font_key = argv[1]
 output_path = argv[2]
-main_res = int(argv[3]) if len(argv) > 3 else 9
-border_res = int(argv[4]) if len(argv) > 4 else 5
+main_res   = int(sys.argv[4]) if len(sys.argv) > 4 else 9
+border_res = int(sys.argv[5]) if len(sys.argv) > 5 else 5
+
+curve.resolution_u = main_res
+border_curve.resolution_u = border_res
+
 
 # Reset scene
 bpy.ops.wm.read_factory_settings(use_empty=True)
