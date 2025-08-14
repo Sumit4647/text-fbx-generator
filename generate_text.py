@@ -34,17 +34,47 @@ FONT_MAP = {
     "THEBOLDFONT":            "Font/THEBOLDFONT.ttf",
 }
 
+# Per-font geometry tweaks: (curve_res, curve_ext, border_res,
+# border_bevel_res, border_ext, border_bevel_depth). Values tuned in
+# Blender to keep border thickness consistent across fonts.
+FONT_SETTINGS = {
+    "A4SPEED-Bold":           (1, 0.074, 1, 2, 0.04, None),
+    "Arial":                  (1, 0.074, 1, 2, 0.04, None),
+    "BebasNeue-Regular":      (1, 0.074, 1, 2, 0.04, None),
+    "Bold Drop":              (2, 0.069, 1, 1, 0.074, None),
+    "Bubblegum":              (4, 0.069, 4, 2, 0.074, None),
+    "BurbankBigCondensed-Black": (7, 0.069, 5, 1, 0.074, None),
+    "Creamy Soup":            (5, 0.069, 3, 1, 0.074, None),
+    "Designer":               (6, 0.069, 3, 1, 0.074, None),
+    "Heavitas":               (6, 0.069, 5, 2, 0.074, None),
+    "Kind Daily":             (2, 0.069, 1, 1, 0.074, 0.040),
+    "LEMONMILK-Bold":         (7, 0.069, 6, 1, 0.074, 0.029),
+    "Minecrafter.Alt":        (1, 0.069, 1, 1, 0.074, 0.039),
+    "OpenSans-Bold":          (5, 0.069, 4, 1, 0.074, 0.029),
+    "PackyGreat":             (4, 0.069, 3, 1, 0.074, 0.032),
+    "paladins":               (1, 0.069, 1, 1, 0.074, 0.032),
+    "Pricedown Bl":           (4, 0.069, 3, 1, 0.074, 0.032),
+    "Roboto-Regular":         (4, 0.069, 3, 1, 0.074, 0.021),
+    "Square Game":            (7, 0.069, 5, 1, 0.074, 0.030),
+    "Super Greatly":          (3, 0.069, 2, 1, 0.074, 0.030),
+    "SuperMario256":          (1, 0.069, 1, 1, 0.074, 0.030),
+    "Supersonic Rocketship":  (5, 0.069, 6, 1, 0.074, 0.030),
+    "THEBOLDFONT":            (4, 0.069, 3, 1, 0.074, 0.030),
+}
+
 font_file = os.path.join(os.path.dirname(__file__), FONT_MAP.get(font_key))
 if not os.path.exists(font_file):
     raise FileNotFoundError(font_file)
 font = bpy.data.fonts.load(font_file)
 
+settings = FONT_SETTINGS[font_key]
+
 # Create curve & style main text
 curve = bpy.data.curves.new(type="FONT", name="TextCurve")
 curve.body            = text
 curve.font            = font
-curve.resolution_u    = 9
-curve.extrude         = 0.04
+curve.resolution_u    = settings[0]
+curve.extrude         = settings[1]
 curve.bevel_depth     = 0
 curve.bevel_resolution= 0
 
@@ -56,10 +86,10 @@ main_obj.rotation_euler = (1.5708, 0, 0)
 border_curve = curve.copy()
 border_curve.body            = text
 border_curve.font            = font
-border_curve.resolution_u    = 5
-border_curve.extrude         = 0.04
-border_curve.bevel_depth     = 0.024
-border_curve.bevel_resolution= 4
+border_curve.resolution_u    = settings[2]
+border_curve.bevel_resolution= settings[3]
+border_curve.extrude         = settings[4]
+border_curve.bevel_depth     = settings[5] if settings[5] is not None else 0.024
 
 border_obj = bpy.data.objects.new("BorderText", border_curve)
 bpy.context.collection.objects.link(border_obj)
@@ -87,3 +117,4 @@ assign(border_obj,"black", (0,0,0))
 main_obj.select_set(True)
 border_obj.select_set(True)
 bpy.ops.export_scene.fbx(filepath=output_path, use_selection=True)
+
