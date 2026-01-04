@@ -1,16 +1,9 @@
+from flask import Flask, request, send_file
 from flask_cors import CORS
+import subprocess, uuid, os
 
-CORS(app, resources={
-    r"/*": {
-        "origins": [
-            "*",  # temporary for testing
-            "https://bolt.new",
-            "https://*.bolt.new",
-            "https://*.netlify.app",
-            "https://yourdomain.com"
-        ]
-    }
-})
+app = Flask(__name__)
+CORS(app)
 
 
 # Map keys to font files in your Font/ folder
