@@ -105,7 +105,7 @@
       form.append("text", input.value);
 
       try {
-        const res = await fetch("text-fbx-generator-production-0a3e.up.railway.app/generate", {
+        const res = await fetch("https://text-fbx-generator-891772725818.europe-west1.run.app/generate", {
           method: "POST",
           body: form,
         });
