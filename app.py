@@ -1,9 +1,26 @@
 from flask import Flask, request, send_file
 from flask_cors import CORS
-import subprocess, uuid, os
 
 app = Flask(__name__)
 CORS(app)
+
+@app.route("/", methods=["GET"])
+def home():
+    return "OK", 200
+
+@app.route("/generate", methods=["POST"])
+def generate():
+    text = request.form.get("text")
+    if not text:
+        return "Missing text", 400
+
+    # generate FBX logic
+
+
+@app.route("/", methods=["GET"])
+def home():
+    return "OK", 200
+
 
 
 # Map keys to font files in your Font/ folder
@@ -49,14 +66,5 @@ def generate():
     subprocess.run(cmd, check=True)
     return send_file(filename, as_attachment=True, download_name="3dtext.fbx")
 
-import os  # Ensure this is imported at the top
-
-# ... rest of your code ...
-
-if __name__ == "__main__":
-    # 1. Get the PORT from Railway (it's in the environment variables)
-    # 2. If it's not there (like on your laptop), default to 5000
-    port = int(os.environ.get("PORT", 5000))
-    
-    # 3. Use that dynamic port variable
-    app.run(host="0.0.0.0", port=port)
+if __name__=="__main__":
+    app.run(host="0.0.0.0", port=5000)
