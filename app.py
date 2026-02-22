@@ -1,13 +1,31 @@
+import uuid, os, subprocess
 from flask import Flask, request, send_file
 from flask_cors import CORS
-import subprocess
-import uuid
-import os
+from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
 
-# 1. KEEP YOUR EXISTING FONT MAP
+@app.route("/", methods=["GET"])
+def home():
+    return "OK", 200
+
+@app.route("/generate", methods=["POST"])
+def generate():
+    text = request.form.get("text")
+    if not text:
+        return "Missing text", 400
+
+    # generate FBX logic
+
+
+@app.route("/", methods=["GET"])
+def home():
+    return "OK", 200
+
+
+
+# Map keys to font files in your Font/ folder
 FONT_MAP = {
     "A4SPEED-Bold":           "Font/A4SPEED-Bold.ttf",
     "Arial":                  "Font/Arial.ttf",
@@ -33,61 +51,45 @@ FONT_MAP = {
     "THEBOLDFONT":            "Font/THEBOLDFONT.ttf",
 }
 
-@app.route("/", methods=["GET"])
-def home():
-    return "OK", 200
 
 @app.route('/generate', methods=['POST'])
 def generate():
     text = request.form.get('text', '').strip()
-    
-    # Setup variables
-    font_arg = ""
-    temp_font_path = None
-    
-    # 2. CHECK FOR CUSTOM UPLOADED FILE
-    uploaded_file = request.files.get('custom_font')
-    
-    if uploaded_file and uploaded_file.filename:
-        # Save custom font temporarily
-        ext = os.path.splitext(uploaded_file.filename)[1]
-        temp_font_path = f"temp_font_{uuid.uuid4()}{ext}"
-        uploaded_file.save(temp_font_path)
-        
-        # Pass the FILE PATH to Blender
-        font_arg = temp_font_path
-        
+    is_custom = request.form.get('is_custom') == 'true'
+
+    if not text:
+        return "Bad request: missing text", 400
+
+    custom_font_filepath = None
+    if is_custom:
+        custom_file = request.files.get('font_file')
+        if not custom_file:
+            return "Bad request: missing font_file", 400
+        custom_font_filepath = f"{uuid.uuid4()}_{custom_file.filename}"
+        custom_file.save(custom_font_filepath)
+        font_arg = "CUSTOM"
     else:
-        # 3. IF NO UPLOAD, USE YOUR EXISTING FONT MAP
         font_key = request.form.get('font', 'BurbankBigCondensed-Black')
-        
-        if not text or font_key not in FONT_MAP:
-            return "Bad request: Text missing or Font not found", 400
-            
-        # Pass the FONT KEY to Blender (Script will look it up in its own map)
+        if font_key not in FONT_MAP:
+            return "Bad request: invalid font_key", 400
         font_arg = font_key
 
-    # Generate unique output filename
     filename = f"{uuid.uuid4()}.fbx"
-    
+    cmd = [
+      "blender","--background","--python","generate_text.py","--",
+      text, font_arg, filename
+    ]
+    if custom_font_filepath:
+        cmd.append(custom_font_filepath)
+
     try:
-        # Run Blender script
-        cmd = [
-          "blender", "--background", "--python", "generate_text.py", "--",
-          text, font_arg, filename
-        ]
         subprocess.run(cmd, check=True)
         return send_file(filename, as_attachment=True, download_name="3dtext.fbx")
-        
-    except Exception as e:
-        return f"Error: {str(e)}", 500
-        
     finally:
-        # 4. CLEANUP: Delete generated FBX and temp font
+        if custom_font_filepath and os.path.exists(custom_font_filepath):
+            os.remove(custom_font_filepath)
         if os.path.exists(filename):
-            os.remove(filename)
-        if temp_font_path and os.path.exists(temp_font_path):
-            os.remove(temp_font_path)
+            pass # Usually handled by background tasks in prod, sending file directly works for now
 
 if __name__=="__main__":
     app.run(host="0.0.0.0", port=5000)
