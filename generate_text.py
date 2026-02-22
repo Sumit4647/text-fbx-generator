@@ -1,8 +1,12 @@
 import bpy, sys, os
 
-# Parse args: text, font_key, output_path
+# Parse args: text, font_key, output_path, [custom_font_path]
 argv = sys.argv[sys.argv.index("--")+1:]
-text, font_key, output_path = argv
+if len(argv) >= 4:
+    text, font_key, output_path, custom_font_path = argv[:4]
+else:
+    text, font_key, output_path = argv[:3]
+    custom_font_path = None
 
 # Reset scene
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -62,12 +66,16 @@ FONT_SETTINGS = {
     "THEBOLDFONT":            (4, 0.069, 3, 1, 0.074, 0.030),
 }
 
-font_file = os.path.join(os.path.dirname(__file__), FONT_MAP.get(font_key))
+if font_key == "CUSTOM" and custom_font_path:
+    font_file = custom_font_path
+    settings = (7, 0.069, 5, 1, 0.074, 0.030) # Default robust settings
+else:
+    font_file = os.path.join(os.path.dirname(__file__), FONT_MAP.get(font_key))
+    settings = FONT_SETTINGS[font_key]
+
 if not os.path.exists(font_file):
     raise FileNotFoundError(font_file)
 font = bpy.data.fonts.load(font_file)
-
-settings = FONT_SETTINGS[font_key]
 
 # Create curve & style main text
 curve = bpy.data.curves.new(type="FONT", name="TextCurve")
@@ -117,4 +125,3 @@ assign(border_obj,"black", (0,0,0))
 main_obj.select_set(True)
 border_obj.select_set(True)
 bpy.ops.export_scene.fbx(filepath=output_path, use_selection=True)
-
