@@ -1,18 +1,15 @@
-import bpy, sys, os
+import bpy, sys, os, math
 
-# Parse args: text, font_key, output_path, [custom_font_path]
+# Parse args: text, font_key, output_png, [custom_font_path]
 argv = sys.argv[sys.argv.index("--")+1:]
 if len(argv) >= 4:
-    text, font_key, output_path, custom_font_path = argv[:4]
+    text, font_key, output_png, custom_font_path = argv[:4]
 else:
-    text, font_key, output_path = argv[:3]
+    text, font_key, output_png = argv[:3]
     custom_font_path = None
 
-# Reset scene
 bpy.ops.wm.read_factory_settings(use_empty=True)
 
-# Determine font file path
-# Map keys to font files in your Font/ folder
 FONT_MAP = {
     "A4SPEED-Bold":           "Font/A4SPEED-Bold.ttf",
     "Arial":                  "Font/Arial.ttf",
@@ -38,9 +35,6 @@ FONT_MAP = {
     "THEBOLDFONT":            "Font/THEBOLDFONT.ttf",
 }
 
-# Per-font geometry tweaks: (curve_res, curve_ext, border_res,
-# border_bevel_res, border_ext, border_bevel_depth). Values tuned in
-# Blender to keep border thickness consistent across fonts.
 FONT_SETTINGS = {
     "A4SPEED-Bold":           (1, 0.074, 1, 2, 0.04, None),
     "Arial":                  (1, 0.074, 1, 2, 0.04, None),
@@ -68,16 +62,16 @@ FONT_SETTINGS = {
 
 if font_key == "CUSTOM" and custom_font_path:
     font_file = custom_font_path
-    settings = (7, 0.069, 5, 1, 0.074, 0.030) # Default robust settings
+    settings = (7, 0.069, 5, 1, 0.074, 0.030)
 else:
-    font_file = os.path.join(os.path.dirname(__file__), FONT_MAP.get(font_key))
-    settings = FONT_SETTINGS[font_key]
+    font_file = os.path.join(os.path.dirname(__file__), FONT_MAP.get(font_key, "Font/BurbankBigCondensed-Black.otf"))
+    settings = FONT_SETTINGS.get(font_key, (7, 0.069, 5, 1, 0.074, 0.030))
 
 if not os.path.exists(font_file):
     raise FileNotFoundError(font_file)
 font = bpy.data.fonts.load(font_file)
 
-# Create curve & style main text
+# ── Build exact same geometry as generate_text.py ──────────────────────────
 curve = bpy.data.curves.new(type="FONT", name="TextCurve")
 curve.body            = text
 curve.font            = font
@@ -90,7 +84,6 @@ main_obj = bpy.data.objects.new("MainText", curve)
 bpy.context.collection.objects.link(main_obj)
 main_obj.rotation_euler = (1.5708, 0, 0)
 
-# Duplicate for border
 border_curve = curve.copy()
 border_curve.body            = text
 border_curve.font            = font
@@ -104,24 +97,77 @@ bpy.context.collection.objects.link(border_obj)
 border_obj.rotation_euler = (1.5708, 0, 0)
 border_obj.location.y   += 0.035
 
-# Convert both to mesh
 for obj in (main_obj, border_obj):
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
     bpy.ops.object.convert(target='MESH')
     obj.select_set(False)
 
-# Assign white / black materials
 def assign(obj, name, color):
     mat = bpy.data.materials.get(name) or bpy.data.materials.new(name)
     mat.use_nodes = False
     mat.diffuse_color = (*color, 1)
     obj.data.materials.append(mat)
 
-assign(main_obj,  "white", (1,1,1))
-assign(border_obj,"black", (0,0,0))
+assign(main_obj,   "white", (1, 1, 1))
+assign(border_obj, "black", (0, 0, 0))
 
-# Export only these two
+# ── Centre text in view ──────────────────────────────────────────────────────
+bpy.ops.object.select_all(action='SELECT')
+bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')
+for obj in bpy.context.selected_objects:
+    obj.location = (0, 0, 0)
+
+# ── Camera ───────────────────────────────────────────────────────────────────
+cam_data = bpy.data.cameras.new("PreviewCam")
+cam_data.type = 'ORTHO'
+cam_obj = bpy.data.objects.new("PreviewCam", cam_data)
+bpy.context.collection.objects.link(cam_obj)
+bpy.context.scene.camera = cam_obj
+
+# Position camera front-facing (matching the FBX rotation = 90° on X)
+cam_obj.location    = (0, -12, 0)
+cam_obj.rotation_euler = (math.pi / 2, 0, 0)
+
+# Auto-fit orthographic scale to text width
+bpy.context.view_layer.update()
 main_obj.select_set(True)
-border_obj.select_set(True)
-bpy.ops.export_scene.fbx(filepath=output_path, use_selection=True)
+bpy.context.view_layer.objects.active = main_obj
+bpy.ops.object.select_all(action='SELECT')
+bpy.ops.view3d.camera_to_view_selected() if False else None   # skip operator – manual fit
+bbox_corners = [main_obj.matrix_world @ v.co for v in main_obj.data.vertices]
+xs = [c.x for c in bbox_corners]
+zs = [c.z for c in bbox_corners]
+width  = max(xs) - min(xs) if xs else 4
+height = max(zs) - min(zs) if zs else 1
+cam_data.ortho_scale = max(width, height) * 1.35 + 1.0
+
+# ── Lighting ─────────────────────────────────────────────────────────────────
+def add_sun(name, energy, rotation):
+    ldata = bpy.data.lights.new(name, type='SUN')
+    ldata.energy = energy
+    lobj = bpy.data.objects.new(name, ldata)
+    bpy.context.collection.objects.link(lobj)
+    lobj.rotation_euler = rotation
+
+add_sun("Key",  3.0, (math.radians(45),  0,               math.radians(30)))
+add_sun("Fill", 1.2, (math.radians(30),  math.radians(135), 0))
+add_sun("Rim",  0.8, (math.radians(-20), 0,               math.radians(180)))
+
+# ── Render settings ──────────────────────────────────────────────────────────
+scene = bpy.context.scene
+scene.render.engine      = 'BLENDER_EEVEE_NEXT' if hasattr(bpy.context.scene.eevee, 'taa_render_samples') else 'BLENDER_EEVEE'
+scene.render.resolution_x = 800
+scene.render.resolution_y = 300
+scene.render.resolution_percentage = 100
+scene.render.film_transparent = True          # transparent background
+scene.render.image_settings.file_format = 'PNG'
+scene.render.filepath = output_png
+
+# Fast render settings
+try:
+    scene.eevee.taa_render_samples = 4
+except Exception:
+    pass
+
+bpy.ops.render.render(write_still=True)
