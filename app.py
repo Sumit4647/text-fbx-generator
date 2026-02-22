@@ -1,7 +1,6 @@
 import uuid, os, subprocess
 from flask import Flask, request, send_file
 from flask_cors import CORS
-from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
@@ -9,22 +8,6 @@ CORS(app)
 @app.route("/", methods=["GET"])
 def home():
     return "OK", 200
-
-@app.route("/generate", methods=["POST"])
-def generate():
-    text = request.form.get("text")
-    if not text:
-        return "Missing text", 400
-
-    # generate FBX logic
-
-
-@app.route("/", methods=["GET"])
-def home():
-    return "OK", 200
-
-
-
 # Map keys to font files in your Font/ folder
 FONT_MAP = {
     "A4SPEED-Bold":           "Font/A4SPEED-Bold.ttf",
@@ -92,4 +75,5 @@ def generate():
             pass # Usually handled by background tasks in prod, sending file directly works for now
 
 if __name__=="__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host="0.0.0.0", port=port)
