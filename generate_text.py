@@ -1,4 +1,4 @@
-import bpy, sys, os
+import bpy, sys, os, re
 
 # Parse args: text, font_key, output_path, [custom_font_path]
 argv = sys.argv[sys.argv.index("--")+1:]
@@ -8,10 +8,12 @@ else:
     text, font_key, output_path = argv[:3]
     custom_font_path = None
 
+# ── Sanitize text into a safe identifier (max 20 chars) ─────────────────────
+safe_id = re.sub(r'[^a-zA-Z0-9]', '_', text)[:20].strip('_') or "Text"
+
 # Reset scene
 bpy.ops.wm.read_factory_settings(use_empty=True)
 
-# Determine font file path
 # Map keys to font files in your Font/ folder
 FONT_MAP = {
     "A4SPEED-Bold":           "Font/A4SPEED-Bold.ttf",
@@ -38,8 +40,6 @@ FONT_MAP = {
     "THEBOLDFONT":            "Font/THEBOLDFONT.ttf",
 }
 
-# Per-font geometry tweaks: (curve_res, curve_ext, border_res,
-# border_bevel_res, border_ext, border_bevel_depth). Values tuned in
 # Blender to keep border thickness consistent across fonts.
 FONT_SETTINGS = {
     "A4SPEED-Bold":           (1, 0.074, 1, 2, 0.04, None),
@@ -78,7 +78,8 @@ if not os.path.exists(font_file):
 font = bpy.data.fonts.load(font_file)
 
 # Create curve & style main text
-curve = bpy.data.curves.new(type="FONT", name="TextCurve")
+# ── Use safe_id so internal node names are unique per text ───────────────────
+curve = bpy.data.curves.new(type="FONT", name=f"{safe_id}_TextCurve")
 curve.body            = text
 curve.font            = font
 curve.resolution_u    = settings[0]
@@ -86,12 +87,13 @@ curve.extrude         = settings[1]
 curve.bevel_depth     = 0
 curve.bevel_resolution= 0
 
-main_obj = bpy.data.objects.new("MainText", curve)
+main_obj = bpy.data.objects.new(f"{safe_id}_MainText", curve)
 bpy.context.collection.objects.link(main_obj)
 main_obj.rotation_euler = (1.5708, 0, 0)
 
 # Duplicate for border
 border_curve = curve.copy()
+border_curve.name            = f"{safe_id}_TextCurve_Border"
 border_curve.body            = text
 border_curve.font            = font
 border_curve.resolution_u    = settings[2]
@@ -99,7 +101,7 @@ border_curve.bevel_resolution= settings[3]
 border_curve.extrude         = settings[4]
 border_curve.bevel_depth     = settings[5] if settings[5] is not None else 0.024
 
-border_obj = bpy.data.objects.new("BorderText", border_curve)
+border_obj = bpy.data.objects.new(f"{safe_id}_BorderText", border_curve)
 bpy.context.collection.objects.link(border_obj)
 border_obj.rotation_euler = (1.5708, 0, 0)
 border_obj.location.y   += 0.035
@@ -109,6 +111,8 @@ for obj in (main_obj, border_obj):
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
     bpy.ops.object.convert(target='MESH')
+    # Also rename the mesh data block to match the object name
+    obj.data.name = obj.name
     obj.select_set(False)
 
 # Assign white / black materials
@@ -118,8 +122,8 @@ def assign(obj, name, color):
     mat.diffuse_color = (*color, 1)
     obj.data.materials.append(mat)
 
-assign(main_obj,  "white", (1,1,1))
-assign(border_obj,"black", (0,0,0))
+assign(main_obj,   "white", (1,1,1))
+assign(border_obj, "black", (0,0,0))
 
 # Export only these two
 main_obj.select_set(True)
