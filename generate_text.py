@@ -36,6 +36,9 @@ FONT_MAP = {
     "SuperMario256":          "Font/SuperMario256.ttf",
     "Supersonic Rocketship":  "Font/Supersonic Rocketship.ttf",
     "THEBOLDFONT":            "Font/THEBOLDFONT.ttf",
+    "Starjedi":               "Font/Starjedi.ttf",
+    "Starjhol":               "Font/Starjhol.ttf",
+    "Starjout":               "Font/Starjout.ttf",
 }
 
 # Per-font geometry tweaks: (curve_res, curve_ext, border_res,
@@ -64,6 +67,9 @@ FONT_SETTINGS = {
     "SuperMario256":          (1, 0.069, 1, 1, 0.074, 0.030),
     "Supersonic Rocketship":  (5, 0.069, 6, 1, 0.074, 0.030),
     "THEBOLDFONT":            (4, 0.069, 3, 1, 0.074, 0.030),
+    "Starjedi":               (5, 0.069, 4, 1, 0.074, 0.029),
+    "Starjhol":               (5, 0.069, 4, 1, 0.074, 0.029),
+    "Starjout":               (5, 0.069, 4, 1, 0.074, 0.029),
 }
 
 if font_key == "CUSTOM" and custom_font_path:

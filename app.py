@@ -32,6 +32,9 @@ FONT_MAP = {
     "SuperMario256":          "Font/SuperMario256.ttf",
     "Supersonic Rocketship":  "Font/Supersonic Rocketship.ttf",
     "THEBOLDFONT":            "Font/THEBOLDFONT.ttf",
+    "Starjedi":               "Font/Starjedi.ttf",
+    "Starjhol":               "Font/Starjhol.ttf",
+    "Starjout":               "Font/Starjout.ttf",
 }
 
 
@@ -120,5 +123,4 @@ def preview():
             os.remove(fbx_path)
 
 if __name__=="__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=5000)
