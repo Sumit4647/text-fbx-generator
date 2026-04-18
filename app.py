@@ -66,7 +66,10 @@ def generate():
       text, font_arg, filename
     ]
     if custom_font_filepath:
-        cmd.append(custom_font_filepath)
+        cmd.extend(["--custom_font_path", custom_font_filepath])
+    advanced = request.form.get('advanced_settings')
+    if advanced:
+        cmd.extend(["--advanced_settings", advanced])
 
     try:
         subprocess.run(cmd, check=True)
@@ -108,7 +111,10 @@ def preview():
         text, font_arg, fbx_path
     ]
     if custom_font_filepath:
-        cmd.append(custom_font_filepath)
+        cmd.extend(["--custom_font_path", custom_font_filepath])
+    advanced = request.form.get('advanced_settings')
+    if advanced:
+        cmd.extend(["--advanced_settings", advanced])
 
     try:
         subprocess.run(cmd, check=True, timeout=90)

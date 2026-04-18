@@ -1,12 +1,27 @@
-import bpy, sys, os, math
+import bpy, sys, os, math, json, argparse
 
-# Parse args: text, font_key, output_png, [custom_font_path]
+# Parse args
+parser = argparse.ArgumentParser()
+parser.add_argument("text")
+parser.add_argument("font_key")
+parser.add_argument("output_path")
+parser.add_argument("--custom_font_path", default=None)
+parser.add_argument("--advanced_settings", default="None")
+
 argv = sys.argv[sys.argv.index("--")+1:]
-if len(argv) >= 4:
-    text, font_key, output_png, custom_font_path = argv[:4]
-else:
-    text, font_key, output_png = argv[:3]
-    custom_font_path = None
+args, _ = parser.parse_known_args(argv)
+
+text = args.text
+font_key = args.font_key
+output_png = args.output_path
+custom_font_path = args.custom_font_path
+
+adv_settings = None
+if args.advanced_settings != "None":
+    try:
+        adv_settings = json.loads(args.advanced_settings)
+    except Exception as e:
+        print("Failed to parse advanced settings:", e)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 
@@ -73,6 +88,19 @@ else:
     font_file = os.path.join(os.path.dirname(__file__), FONT_MAP.get(font_key, "Font/BurbankBigCondensed-Black.otf"))
     settings = FONT_SETTINGS.get(font_key, (7, 0.069, 5, 1, 0.074, 0.030))
 
+enable_border = True
+if adv_settings:
+    settings = (
+        int(adv_settings.get("curveRes", settings[0])),
+        float(adv_settings.get("curveExtrude", settings[1])),
+        int(adv_settings.get("borderRes", settings[2])),
+        int(adv_settings.get("borderBevelRes", settings[3])),
+        float(adv_settings.get("borderExtrude", settings[4])),
+        float(adv_settings.get("borderBevelDepth", settings[5]))
+    )
+    if "enableBorder" in adv_settings and str(adv_settings["enableBorder"]).lower() in ('false', '0', 'f'):
+        enable_border = False
+
 if not os.path.exists(font_file):
     raise FileNotFoundError(font_file)
 font = bpy.data.fonts.load(font_file)
@@ -90,20 +118,23 @@ main_obj = bpy.data.objects.new("MainText", curve)
 bpy.context.collection.objects.link(main_obj)
 main_obj.rotation_euler = (1.5708, 0, 0)
 
-border_curve = curve.copy()
-border_curve.body            = text
-border_curve.font            = font
-border_curve.resolution_u    = settings[2]
-border_curve.bevel_resolution= settings[3]
-border_curve.extrude         = settings[4]
-border_curve.bevel_depth     = settings[5] if settings[5] is not None else 0.024
+objs_to_convert = [main_obj]
+if enable_border:
+    border_curve = curve.copy()
+    border_curve.body            = text
+    border_curve.font            = font
+    border_curve.resolution_u    = settings[2]
+    border_curve.bevel_resolution= settings[3]
+    border_curve.extrude         = settings[4]
+    border_curve.bevel_depth     = settings[5] if settings[5] is not None else 0.024
+    
+    border_obj = bpy.data.objects.new("BorderText", border_curve)
+    bpy.context.collection.objects.link(border_obj)
+    border_obj.rotation_euler = (1.5708, 0, 0)
+    border_obj.location.y   += 0.035
+    objs_to_convert.append(border_obj)
 
-border_obj = bpy.data.objects.new("BorderText", border_curve)
-bpy.context.collection.objects.link(border_obj)
-border_obj.rotation_euler = (1.5708, 0, 0)
-border_obj.location.y   += 0.035
-
-for obj in (main_obj, border_obj):
+for obj in objs_to_convert:
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
     bpy.ops.object.convert(target='MESH')
@@ -116,7 +147,8 @@ def assign(obj, name, color):
     obj.data.materials.append(mat)
 
 assign(main_obj,   "white", (1, 1, 1))
-assign(border_obj, "black", (0, 0, 0))
+if enable_border:
+    assign(border_obj, "black", (0, 0, 0))
 
 # ── Centre text in view ──────────────────────────────────────────────────────
 bpy.ops.object.select_all(action='SELECT')
