@@ -32,6 +32,9 @@ FONT_MAP = {
     "SuperMario256":          "Font/SuperMario256.ttf",
     "Supersonic Rocketship":  "Font/Supersonic Rocketship.ttf",
     "THEBOLDFONT":            "Font/THEBOLDFONT.ttf",
+        "Starjedi":               "Font/Starjedi.ttf",
+    "Starjhol":               "Font/Starjhol.ttf",
+    "Starjout":               "Font/Starjout.ttf",
 }
 
 
